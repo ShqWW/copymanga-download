@@ -48,6 +48,7 @@ def download_task(root_path,
         chap_name = editer.chap_name_list[chap_no-1]
         chap_uuid = editer.chap_uuid_list[chap_no-1]
         editer.download_single_chap(chap_name, chap_uuid, multithread=multi_thread, is_gui=is_gui, signal=progressring_signal)
+        editer.get_cover(chap_name=chap_name, is_gui=is_gui, signal=cover_signal)
     print('下载成功！', f'漫画路径【{editer.comic_path}】')
     
 

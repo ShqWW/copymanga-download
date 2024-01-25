@@ -6,6 +6,7 @@ import threading
 from concurrent.futures import ThreadPoolExecutor, wait
 import time
 import re
+from PIL import Image
 
 class Editer(object):
     def __init__(self, comic_name, root_path = './'):
@@ -93,6 +94,16 @@ class Editer(object):
         if url not in self.buffer_map.keys():
             req = requests.get(url, headers=self.header).content
             self.buffer_map[url] = req
+
+    def get_cover(self, chap_name, is_gui=False, signal=None):
+        chap_path = os.path.join(self.comic_path, chap_name)
+        imgfile = os.path.join(chap_path, '001.jpg')
+        img = Image.open(imgfile)
+        img_w, img_h = img.size
+        signal_msg = (imgfile, img_h, img_w)
+        if is_gui:
+            signal.emit(signal_msg)
+        
 
 if __name__=='__main__':
     comic_name = 'yaoyeluying' 

@@ -267,8 +267,6 @@ class HomeWidget(QFrame):
         
     def progressring_msg(self, input):
         if input == 'start':
-            self.label_cover.setImage(self.book_icon)
-            self.label_cover.setFixedSize(self.cover_w, self.cover_h)
             self.progressRing.show()
         elif input == 'end':
             self.progressRing.hide()
