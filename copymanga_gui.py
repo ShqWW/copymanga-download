@@ -141,7 +141,7 @@ class HomeWidget(QFrame):
         self.editline_book = LineEdit(self) 
         self.editline_volumn = LineEdit(self) 
         
-        self.editline_book.setText('yaoyeluying')
+        # self.editline_book.setText('yaoyeluying')
         # self.editline_volumn.setText('3')
         
         self.book_icon = QPixmap()
