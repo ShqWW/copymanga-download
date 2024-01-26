@@ -7,10 +7,11 @@ import time
 from PIL import Image
 
 class Downloader(object):
-    def __init__(self, comic_name, root_path = './', url_prev='.site'):
+    def __init__(self, comic_name, root_path = './', url_prev='.site', high_quality=False):
         self.comic_name = comic_name
         self.root_path = root_path
         self.url_prev = url_prev
+        self.high_quality = high_quality
         self.comic_msg_url = f"https://api.copymanga{url_prev}/api/v3/comic2/{comic_name}"
         self.comic_url_api = 'https://api.copymanga{}/api/v3/comic/{}/group/{}/chapters?limit=500&offset=0&platform=3'
         self.chap_url_api = 'https://api.copymanga{}/api/v3/comic/{}/chapter2/{}?platform=3'
@@ -42,15 +43,15 @@ class Downloader(object):
     def get_comic_chaps(self):
         req = requests.get(self.comic_url, headers=self.header)
         comic_urls = req.json()['results']['list']
-        chap_name_list = []
-        chap_uuid_list = []
+        self.chap_name_list = []
+        self.chap_uuid_list = []
+        self.chap_pagenum_list = []
         for comic_url in comic_urls:
-            chap_name_list.append(comic_url['name'])
-            chap_uuid_list.append(comic_url['uuid'])
-        self.chap_name_list = chap_name_list
-        self.chap_uuid_list = chap_uuid_list
+            self.chap_name_list.append(comic_url['name'])
+            self.chap_uuid_list.append(comic_url['uuid'])
+            self.chap_pagenum_list.append(comic_url['size'])
         self.comic_path = os.path.join(self.root_path, self.comic_title)
-        return self.chap_name_list, self.chap_uuid_list
+        return self.chap_name_list, self.chap_uuid_list, self.chap_pagenum_list
 
     def get_image(self, is_gui=False, signal=None):
         self.pre_request_img()
@@ -65,10 +66,12 @@ class Downloader(object):
                 signal.emit(int(100*(i+1)/len_iter))
             
     
-    def download_single_chap(self, chap_name, uuid, multithread=True, is_gui=False, signal=None):
+    def download_single_chap(self, chap_name, uuid, page_num, multithread=True, is_gui=False, signal=None):
         print('正在下载'+chap_name)
         chap_path = os.path.join(self.comic_path, chap_name)
         os.makedirs(chap_path, exist_ok=True)
+        if len(os.listdir(chap_path))==page_num:
+            return 
         img_url = self.chap_url_api.format(self.url_prev, self.comic_name, uuid)
         while True:
             req = requests.get(img_url, headers=self.header)
@@ -77,13 +80,17 @@ class Downloader(object):
                 break
             else:
                 print('触发访问频率上限，重新请求.....')
-                time.sleep(5)
+                time.sleep(10)
         img_urls = [url['url'] for url in req['chapter']['contents']]
+        
+        if self.high_quality:
+            img_urls = [url.replace('c800x', 'c1500x') for url in img_urls]
         img_nos = req['chapter']['words']
         if multithread:
             for img_url in img_urls:
                 self.pool.submit(self.prev_buffer, img_url)
         len_iter = len(img_urls)
+        
         if is_gui:
             signal.emit('start') 
             for i, (img_no, img_url) in enumerate(zip(img_nos, img_urls)):

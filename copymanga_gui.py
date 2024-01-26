@@ -25,8 +25,7 @@ class MainThread(QThread):
         try:
             comic_no = self.parent.editline_book.text()
             chap_no = self.parent.editline_volumn.text()
-            # downloader_router(self.parent.parent.out_path, comic_no, chap_no, True, self.parent.parent.multi_thread, self.parent.progressring_signal, self.parent.cover_signal)
-            downloader_router(self.parent.parent.out_path, comic_no, chap_no, self.parent.parent.url_prev, True, self.parent.parent.multi_thread, self.parent.hang_signal, self.parent.progressring_signal, self.parent.cover_signal, self.parent.editline_hang)
+            downloader_router(self.parent.parent.out_path, comic_no, chap_no, self.parent.parent.url_prev, self.parent.parent.high_quality, True, self.parent.parent.multi_thread, self.parent.hang_signal, self.parent.progressring_signal, self.parent.cover_signal, self.parent.editline_hang)
             self.parent.end_signal.emit('')
         except Exception as e:
             self.parent.end_signal.emit('')
@@ -73,13 +72,11 @@ class SettingWidget(QFrame):
             self.parent.out_path,
             self.setting_group
         )
-        self.themeMode = OptionsConfigItem(
-        None, "ThemeMode", Theme.DARK, OptionsValidator(Theme), None)
-        self.urlMode = OptionsConfigItem(
-        None, "urlMode", UrlPrev.SITE, OptionsValidator(UrlPrev), None)
+        self.themeMode = OptionsConfigItem(None, "ThemeMode", Theme.DARK, OptionsValidator(Theme), None)
+        self.urlMode = OptionsConfigItem(None, "urlMode", UrlPrev.SITE, OptionsValidator(UrlPrev), None)
 
-        self.threadMode = OptionsConfigItem(
-        None, "ThreadMode", True, BoolValidator())
+        self.threadMode = OptionsConfigItem(None, "ThreadMode", True, BoolValidator())
+        self.qualityMode = OptionsConfigItem(None, "QualityMode", True, BoolValidator())
 
         self.theme_card = OptionsSettingCard(
             self.themeMode,
@@ -95,7 +92,7 @@ class SettingWidget(QFrame):
 
         self.url_card = OptionsSettingCard(
             self.urlMode,
-            FIF.BRUSH,
+            FIF.VPN,
             self.tr('漫画域名后缀'),
             self.tr("漫画域名切换"),
             texts=[
@@ -109,18 +106,29 @@ class SettingWidget(QFrame):
         self.thread_card = SwitchSettingCard(
             FIF.SPEED_HIGH,
             self.tr('多线程缓存'),
-            self.tr('开启后理论上会加快下载速度，但可能会触发反爬机制造成实际下载速度变慢'),
+            self.tr('开启后理论上会加快下载速度，但可能会增加服务端压力'),
             parent=self.parent,
             configItem=self.threadMode
         )
+
+        self.quality_card = SwitchSettingCard(
+            FIF.LEAF,
+            self.tr('下载高质量图片'),
+            self.tr('开启后会提高漫画清晰度，但会增加下载漫画的体积'),
+            parent=self.parent,
+            configItem=self.qualityMode
+        )
         self.thread_card.setValue(True)
+        self.quality_card.setValue(True)
         self.thread_changed()
-        # self.thread_card.switchButton.setText(self.tr('开'))
+        self.quality_changed()
 
         self.setting_group.addSettingCard(self.download_path_card)
         self.setting_group.addSettingCard(self.thread_card)
+        self.setting_group.addSettingCard(self.quality_card)
         self.setting_group.addSettingCard(self.url_card)
         self.setting_group.addSettingCard(self.theme_card)
+        
         self.expandLayout.setSpacing(28)
         self.expandLayout.setContentsMargins(20, 10, 20, 0)
         self.expandLayout.addWidget(self.setting_group)
@@ -129,6 +137,7 @@ class SettingWidget(QFrame):
         self.theme_card.optionChanged.connect(self.theme_changed)
         self.url_card.optionChanged.connect(self.url_changed)
         self.thread_card.checkedChanged.connect(self.thread_changed)
+        self.quality_card.checkedChanged.connect(self.quality_changed)
 
     def download_path_changed(self):
         """ download folder card clicked slot """
@@ -154,6 +163,14 @@ class SettingWidget(QFrame):
         self.parent.multi_thread = is_checked
         if os.path.exists('./config'):
             shutil.rmtree('./config')
+    def quality_changed(self):
+        is_checked = self.quality_card.isChecked()
+        self.quality_card.switchButton.setText(
+            self.tr('高') if is_checked else self.tr('低'))
+        self.parent.high_quality = is_checked
+        if os.path.exists('./config'):
+            shutil.rmtree('./config')
+        
 
     
 
@@ -346,13 +363,14 @@ class Window(FluentWindow):
         self.initNavigation()
         self.initWindow()
         self.multi_thread = True
+        self.high_quality = True
         
     def initNavigation(self):
         self.addSubInterface(self.homeInterface, FIF.HOME, '主界面')
         self.addSubInterface(self.settingInterface, FIF.SETTING, '设置', NavigationItemPosition.BOTTOM)
 
     def initWindow(self):
-        self.resize(900, 460)
+        self.resize(900, 800)
         pixmap = QPixmap()
         pixmap.loadFromData(base64.b64decode(logo_base64))
         self.setWindowIcon(QIcon(pixmap))
