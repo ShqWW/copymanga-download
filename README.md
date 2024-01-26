@@ -4,20 +4,21 @@
 </div>
 
 <h1 align="center">
-  &nbsp;&nbsp;&nbsp;&nbsp;拷贝漫画下载器
+  &nbsp;&nbsp;&nbsp;&nbsp;拷贝漫画EPUB下载器
 </h1>
 
 
 
 
 
-[拷贝漫画](https://www.copymanga.site)(copymanga)下载。
+[拷贝漫画](https://www.copymanga.site)(copymanga)下载, 并打包为EPUB格式。
 
 特性:
 
 * Fluent Design风格界面，下载进度与书籍封面显示，主题切换，下载目录自定义。
 * 前后端分离，同时支持命令行版本。
 * 章节批量下载。
+* EPUB格式自动打包
 * 多线程预缓存策略，下载速度快。
 * 网站域名自定义更换，防止被墙。
 * ...................

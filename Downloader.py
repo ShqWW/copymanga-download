@@ -79,10 +79,10 @@ class Downloader(object):
         len_iter = len(img_urls)
         if is_gui:
             signal.emit('start') 
-            for img_no, img_url in zip(img_nos, img_urls):
+            for i, (img_no, img_url) in enumerate(zip(img_nos, img_urls)):
                 chap_name = os.path.join(chap_path, str(int(img_no)+1).zfill(3)+'.jpg')
                 self.download_img(img_url, chap_name, is_buffer=multithread)
-                signal.emit(int(100*(img_no+1)/len_iter))
+                signal.emit(int(100*(i+1)/len_iter))
             signal.emit('end')
         else:
             for i in tqdm(range(len_iter)):
