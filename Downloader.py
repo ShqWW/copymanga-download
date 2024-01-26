@@ -75,7 +75,10 @@ class Downloader(object):
         img_url = self.chap_url_api.format(self.url_prev, self.comic_name, uuid)
         while True:
             req = requests.get(img_url, headers=self.header)
-            req = req.json()['results']
+            try:
+                req = req.json()['results']
+            except:
+                req = 'throttled'
             if 'throttled' not in str(req):
                 break
             else:
