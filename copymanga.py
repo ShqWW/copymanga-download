@@ -113,12 +113,12 @@ if __name__=='__main__':
         downloader_router(root_path='out', comic_name=args.comic_no, chap_no=args.volume_no)
     else:
         while True:
-            args.comic_name = input('请输入书籍号：')
-            args.volume_no = input('请输入卷号(查看目录信息不输入直接按回车，下载多卷请使用逗号分隔或者连字符-)：')
-            # args.comic_name = 'yaosanjiao'
-            # args.volume_no = '1'
+            # args.comic_name = input('请输入书籍号：')
+            # args.volume_no = input('请输入卷号(查看目录信息不输入直接按回车，下载多卷请使用逗号分隔或者连字符-)：')
+            args.comic_name = 'xinglingganying'
+            args.volume_no = '30-40'
             downloader_router(root_path='out', comic_name=args.comic_name, chap_no=args.volume_no, url_prev='.site', multi_thread=True)
-            # exit(0)
+            exit(0)
     
         
 

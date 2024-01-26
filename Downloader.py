@@ -70,9 +70,16 @@ class Downloader(object):
         chap_path = os.path.join(self.comic_path, chap_name)
         os.makedirs(chap_path, exist_ok=True)
         img_url = self.chap_url_api.format(self.url_prev, self.comic_name, uuid)
-        req = requests.get(img_url, headers=self.header)
-        img_urls = [url['url'] for url in req.json()['results']['chapter']['contents']]
-        img_nos = req.json()['results']['chapter']['words']
+        while True:
+            req = requests.get(img_url, headers=self.header)
+            req = req.json()['results']
+            if 'throttled' not in str(req):
+                break
+            else:
+                print('触发访问频率上限，重新请求.....')
+                time.sleep(5)
+        img_urls = [url['url'] for url in req['chapter']['contents']]
+        img_nos = req['chapter']['words']
         if multithread:
             for img_url in img_urls:
                 self.pool.submit(self.prev_buffer, img_url)
