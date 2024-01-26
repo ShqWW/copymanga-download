@@ -370,7 +370,7 @@ class Window(FluentWindow):
         self.addSubInterface(self.settingInterface, FIF.SETTING, '设置', NavigationItemPosition.BOTTOM)
 
     def initWindow(self):
-        self.resize(900, 600)
+        self.resize(600, 450)
         pixmap = QPixmap()
         pixmap.loadFromData(base64.b64decode(logo_base64))
         self.setWindowIcon(QIcon(pixmap))
