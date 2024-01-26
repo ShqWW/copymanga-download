@@ -6,18 +6,18 @@ import shutil
 def parse_args():
     """Parse input arguments."""
     parser = argparse.ArgumentParser(description='config')
-    parser.add_argument('--book_no', default='0000', type=str)
+    parser.add_argument('--comic_no', default='0000', type=str)
     parser.add_argument('--volume_no', default='1', type=int)
     parser.add_argument('--no_input', default=False, type=bool)
     args = parser.parse_args()
     return args
 
 
-def query_chaps(comic_name):
+def query_chaps(comic_name, url_prev, is_gui=False, hang_signal=None, edit_line_hang=None):
     print('未输入卷号，将返回书籍目录信息......')
-    editer = Editer(comic_name=comic_name, root_path='./out')
+    editer = Editer(comic_name=comic_name, root_path='./out', url_prev=url_prev)
     print('*******************************')
-    editer.get_comic_msg() 
+    editer.get_comic_msg(is_gui, hang_signal, edit_line_hang) 
     editer.get_comic_chaps()
     print(editer.comic_title, editer.comic_author)
     print('*******************************')
@@ -30,15 +30,18 @@ def query_chaps(comic_name):
 
 def download_task(root_path,
                 comic_name,
-                chap_no_list, 
+                chap_no_list,
+                url_prev,
                 is_gui=False,
                 multi_thread=False,
+                hang_signal=None,
                 progressring_signal=None,
-                cover_signal=None,):
+                cover_signal=None,
+                edit_line_hang=None):
     
-    editer = Editer(comic_name=comic_name, root_path=root_path)
+    editer = Editer(comic_name=comic_name, root_path=root_path, url_prev=url_prev)
     print('正在积极地获取书籍信息....')
-    editer.get_comic_msg() 
+    editer.get_comic_msg(is_gui, hang_signal, edit_line_hang) 
     editer.get_comic_chaps()
     print(editer.comic_title, editer.comic_author)
     
@@ -55,15 +58,18 @@ def download_task(root_path,
 def downloader_router(root_path,
                       comic_name,
                       chap_no,
+                      url_prev, 
                       is_gui=False, 
                       multi_thread=False,
+                      hang_signal=None,
                       progressring_signal=None,
-                      cover_signal=None):
+                      cover_signal=None,
+                      edit_line_hang=None):
     if len(comic_name)==0:
         print('请检查输入是否完整正确！')
         return
     elif chap_no == '':
-        query_chaps(comic_name)
+        query_chaps(comic_name, url_prev, is_gui, hang_signal, edit_line_hang)
         return 
     elif chap_no.isdigit():
         chap_no = int(chap_no)
@@ -88,7 +94,7 @@ def downloader_router(root_path,
     else:
             print('请检查输入是否完整正确！')
             return
-    download_task(root_path, comic_name, chap_no_list, is_gui, multi_thread, progressring_signal, cover_signal)
+    download_task(root_path, comic_name, chap_no_list, url_prev, is_gui, multi_thread, hang_signal, progressring_signal, cover_signal, edit_line_hang)
     print('所有下载任务都已经完成！')
     
 if __name__=='__main__':
@@ -96,12 +102,12 @@ if __name__=='__main__':
     download_path = os.path.join(os.path.expanduser('~'), 'Downloads')
 
     if args.no_input:
-        downloader_router(root_path='out', comic_name=args.book_no, chap_no=args.volume_no)
+        downloader_router(root_path='out', comic_name=args.comic_no, chap_no=args.volume_no)
     else:
         while True:
             # args.comic_name = input('请输入书籍号：')
             # args.volume_no = input('请输入卷号(查看目录信息不输入直接按回车，下载多卷请使用逗号分隔或者连字符-)：')
-            args.comic_name = 'yaoyeluying'
+            args.comic_name = 'magicaquartet'
             args.volume_no = '1'
             downloader_router(root_path='out', comic_name=args.comic_name, chap_no=args.volume_no, multi_thread=True)
             # exit(0)
