@@ -1,146 +1,112 @@
-import requests
-from bs4 import BeautifulSoup  # 用于代替正则式 取源码中相应标签中的内容
+import zipfile
 import os
-from rich.progress import track as tqdm
-from concurrent.futures import ThreadPoolExecutor, wait
-import time
+import shutil
+from utils import *
 from PIL import Image
+import numpy as np
 
 class Editer(object):
-    def __init__(self, comic_name, root_path = './', url_prev='site'):
-        self.comic_name = comic_name
-        self.root_path = root_path
-        self.url_prev = url_prev
-        self.comic_msg_url = f"https://api.copymanga.{url_prev}/api/v3/comic2/{comic_name}"
-        self.comic_url_api = 'https://api.copymanga.{}/api/v3/comic/{}/group/{}/chapters?limit=500&offset=0&platform=3'
-        self.chap_url_api = 'https://api.copymanga.{}/api/v3/comic/{}/chapter2/{}?platform=3'
+    def __init__(self, title, author, chap_list, comic_root, out_root, delete_comic=False):
+
+        self.title = self.get_epub_title(title, chap_list)
+        self.author = author
+        self.chap_list = chap_list
+        self.comic_root = comic_root
+        self.out_root = out_root
+
+        self.img_list = []
+        self.chap_first_imgs = []
+        self.delete_comic = delete_comic
+
+    def pack_img(self):
+
+        self.epub_path = os.path.join(self.out_root, 'tmp')
+        self.epub_oebps_path = os.path.join(self.out_root, 'tmp/OEBPS')
+        self.epub_img_path = os.path.join(self.out_root, 'tmp/OEBPS/Images')
+        self.epub_text_path = os.path.join(self.out_root, 'tmp/OEBPS/Text')
+        os.makedirs(self.epub_path, exist_ok=True)
+        os.makedirs(self.epub_oebps_path, exist_ok=True)
+        os.makedirs(self.epub_img_path, exist_ok=True)
+        os.makedirs(self.epub_text_path, exist_ok=True)
         
-        
-        self.header = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.67 Safari/537.36 Edg/87.0.664.47', 'platform': '1'}
+        print('正在打包处理图片......')
+        for chap_no, chap in enumerate(self.chap_list):
+            img_path = os.path.join(self.comic_root, chap)
+            imgs = os.listdir(img_path)
+            img_no = 0
+            self.chap_first_imgs.append(str(chap_no+1).zfill(3) + '_' + str(0).zfill(4) + '.jpg')
+            for img_no, img in enumerate(imgs):
+                img_old_path = os.path.join(img_path, img)
+                img_new = str(chap_no + 1).zfill(3) + '_' + str(img_no).zfill(4) + '.jpg'
+                img_epub_path = os.path.join(self.epub_img_path, img_new)
+                shutil.copyfile(img_old_path, img_epub_path)
+                self.img_list.append(img_new)
 
-        self.max_thread_num = 16
-        self.pool = ThreadPoolExecutor(self.max_thread_num)
-        self.buffer_map = {}
+    def get_epub_title(self, title, chap_list):
+        if len(chap_list)==1:
+            title = title + '-' + chap_list[0]
+        else:
+            title = title + '-' + chap_list[0] + '-' + chap_list[-1]
+        return title
 
-    def get_comic_msg(self, is_gui=False, signal=None, editline=None):
-        req = requests.get(self.comic_msg_url, headers=self.header).json()
-        req = req['results']
-        self.comic_title = req['comic']['name']
-        self.comic_author = req['comic']['author'][0]['name']
-        self.cover_url = req['comic']['cover']
-        cls_dict = req['groups']
-        self.cls_dict = {}
-        for key in cls_dict.keys():
-            self.cls_dict[cls_dict[key]['name']] = cls_dict[key]['path_word']
-        if len(cls_dict.keys())==1:
-            self.url_cls = list(self.cls_dict.values())[0]
-        elif len(cls_dict.keys())>1:
-            choise_name = self.get_choise(list(self.cls_dict.keys()), is_gui, signal, editline)
-            self.url_cls = self.cls_dict[choise_name]
-        self.comic_url = self.comic_url_api.format(self.url_prev, self.comic_name, self.url_cls)
+    def typesetting(self):
+        print('正在生成排版......')
+        for img in self.img_list:
+            text_file = os.path.join(self.epub_text_path, img.replace('.jpg', '.xhtml'))
+            text_htmls = get_xhtml(img)
+            with open(text_file, 'w+', encoding='utf-8') as f:
+                f.writelines(text_htmls)
 
-    def get_comic_chaps(self):
-        req = requests.get(self.comic_url, headers=self.header)
-        comic_urls = req.json()['results']['list']
-        chap_name_list = []
-        chap_uuid_list = []
-        for comic_url in comic_urls:
-            chap_name_list.append(comic_url['name'])
-            chap_uuid_list.append(comic_url['uuid'])
-        self.chap_name_list = chap_name_list
-        self.chap_uuid_list = chap_uuid_list
-        self.comic_path = os.path.join(self.root_path, self.comic_title)
-        return self.chap_name_list, self.chap_uuid_list
 
-    def get_image(self, is_gui=False, signal=None):
-        self.pre_request_img()
-        img_path = self.img_path
-        if is_gui:
-            len_iter = len(self.img_url_map.items())
-            signal.emit('start')
-            for i, (img_url, img_name) in enumerate(self.img_url_map.items()):
-                content = self.get_html_img(img_url, is_buffer=True)
-                with open(img_path+f'/{img_name}.jpg', 'wb') as f:
-                    f.write(content) #写入二进制内容 
-                signal.emit(int(100*(i+1)/len_iter))
-            
+        print('正在生成元数据......')
+
+
+        #封面
+        cover_path = os.path.join(self.epub_img_path, '000_0000.jpg')
+        shutil.copyfile(os.path.join(self.comic_root, 'cover.jpg'), cover_path)
+        textfile = os.path.join(self.epub_text_path, 'cover.xhtml')
+        # img = cv2.imread(cover_path)
+        img = Image.open(cover_path)
+        img = np.array(img)
+        img_htmls = get_cover_html(img.shape[1], img.shape[0])
+        with open(textfile, 'w+', encoding='utf-8') as f:
+            f.writelines(img_htmls)
+
+
+        #内容页
+        content_htmls = get_content_html(self.title, self.author, self.img_list)
+        textfile = os.path.join(self.epub_oebps_path, 'content.opf')
+        with open(textfile, 'w+', encoding='utf-8') as f:
+            f.writelines(content_htmls)
+
+        #目录
+        toc_htmls = get_toc_html(self.title, self.chap_list, self.chap_first_imgs)
+        textfile = os.path.join(self.epub_oebps_path, 'toc.ncx')
+        with open(textfile, 'w+', encoding='utf-8') as f:
+            f.writelines(toc_htmls)
+
+        #get epub_head
+        mimetype = 'application/epub+zip'
+        mimetypefile = os.path.join(self.epub_path, 'mimetype')
+        with open(mimetypefile, 'w+', encoding='utf-8') as f:
+            f.write(mimetype)
+        metainf_folder = os.path.join(self.epub_path, 'META-INF')
+        os.makedirs(metainf_folder, exist_ok=True)
+        container = metainf_folder + '/container.xml'
+        container_htmls = get_container_html()
+        with open(container, 'w+', encoding='utf-8') as f:
+            f.writelines(container_htmls)
     
-    def download_single_chap(self, chap_name, uuid, multithread=True, is_gui=False, signal=None):
-        os.makedirs(self.comic_path, exist_ok=True)
-        print('正在下载'+chap_name)
-        chap_path = os.path.join(self.comic_path, chap_name)
-        os.makedirs(chap_path, exist_ok=True)
-        img_url = self.chap_url_api.format(self.url_prev, self.comic_name, uuid)
-        req = requests.get(img_url, headers=self.header)
-        img_urls = [url['url'] for url in req.json()['results']['chapter']['contents']]
-        if multithread:
-            for img_url in img_urls:
-                self.pool.submit(self.prev_buffer, img_url)
-        if is_gui:
-            len_iter = len(img_urls)
-            signal.emit('start') 
-            for img_no, img_url in enumerate(img_urls):
-                chap_name = os.path.join(chap_path, str(img_no+1).zfill(3)+'.jpg')
-                self.download_img(img_url, chap_name, is_buffer=multithread)
-                signal.emit(int(100*(img_no+1)/len_iter))
-            signal.emit('end')
-        else:
-            for img_no, img_url in enumerate(tqdm(img_urls)):
-                chap_name = os.path.join(chap_path, str(img_no+1).zfill(3)+'.jpg')
-                self.download_img(img_url, chap_name, is_buffer=multithread)
-                
-    def download_img(self, img_url, file_name, is_buffer=False):
-        if is_buffer:
-            while img_url not in self.buffer_map.keys():
-                time.sleep(1)
-            req = self.buffer_map[img_url]
-        else:
-            req = requests.get(img_url, headers=self.header).content
-        with open(file_name, 'wb') as f:
-            f.write(req)
-
-    def prev_buffer(self, url):
-        if url not in self.buffer_map.keys():
-            req = requests.get(url, headers=self.header).content
-            self.buffer_map[url] = req
-
-    def get_cover(self, chap_name, is_gui=False, signal=None):
-        chap_path = os.path.join(self.comic_path, chap_name)
-        imgfile = os.path.join(chap_path, '001.jpg')
-        img = Image.open(imgfile)
-        img_w, img_h = img.size
-        signal_msg = (imgfile, img_h, img_w)
-        if is_gui:
-            signal.emit(signal_msg)
-
-    def get_choise(self, choise_list, is_gui=False, signal=None, editline=None):
-        if is_gui:
-            error_msg = '漫画有多个部分， 请下拉选择框选择想下载的部分' 
-            editline.addItems(choise_list)
-            editline.setCurrentIndex(0)
-            print(error_msg)
-            signal.emit('hang')
-            time.sleep(1)
-            while not editline.isHidden():
-                time.sleep(1)
-            choise = editline.text()
-            editline.clear()
-        else:
-            error_msg = '漫画有多个部分， 请输入想下载的部分的序号' 
-            print(error_msg)
-            for choise_no, choise in enumerate(choise_list):
-                print(f'[{str(choise_no+1)}]', choise)
-            choise_no = input('请输入序号:')
-            choise_no = int(choise_no)-1
-            choise = choise_list[choise_no]
-        return choise
-        
-
-if __name__=='__main__':
-    comic_name = 'yaoyeluying' 
-    # comic_name = 'zgmsbywt' 
-    downloader = Editer(comic_name=comic_name)
-    for i in range(0, 3):
-        chap_name = downloader.chap_name_list[i]
-        chap_uuid = downloader.chap_uuid_list[i]
-        downloader.download_single_chap(chap_name, chap_uuid)
+    def get_epub(self):
+        print('正在打包EPUB......')
+        epub_file = os.path.join(self.out_root, self.title + '.epub')
+        with zipfile.ZipFile(epub_file, "w", zipfile.ZIP_DEFLATED) as zf:
+            for dirpath, dirnames, filenames in os.walk(self.epub_path):
+                fpath = dirpath.replace(self.epub_path,'')
+                fpath = fpath and fpath + os.sep or ''
+                for filename in filenames:
+                    zf.write(os.path.join(dirpath, filename), fpath+filename)
+        shutil.rmtree(self.epub_path)
+        if self.delete_comic:
+            shutil.rmtree(self.comic_root)
+        print('EPUB生成成功, 路径【{}】'.format(epub_file))

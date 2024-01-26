@@ -50,9 +50,12 @@ class EmittingStr(QObject):
 class UrlPrev(Enum):
     """ Theme enumeration """
 
-    SITE = "site"
-    COM= "com"
-    ORG = "org"
+    SITE = ".site"
+    COM= ".com"
+    ORG = ".org"
+    NET = ".net"
+    TV = ".tv"
+    INFO = ".info"
 
 class SettingWidget(QFrame):
     def __init__(self, text: str, parent=None):
@@ -96,8 +99,9 @@ class SettingWidget(QFrame):
             self.tr('漫画域名后缀'),
             self.tr("漫画域名切换"),
             texts=[
-                self.tr('site'), self.tr('org'),
-                self.tr('com')
+                self.tr('.site'), self.tr('.org'),
+                self.tr('.com'), self.tr('.info'),
+                self.tr('.tv'), self.tr('.net')
             ],
             parent=self.parent
         )
@@ -300,6 +304,7 @@ class HomeWidget(QFrame):
         
     def progressring_msg(self, input):
         if input == 'start':
+            self.progressRing.setValue(0)
             self.progressRing.show()
         elif input == 'end':
             self.progressRing.hide()
@@ -332,7 +337,7 @@ class Window(FluentWindow):
         super().__init__()
 
         self.out_path = os.path.join(os.path.expanduser('~'), 'Downloads')
-        self.url_prev = 'site'
+        self.url_prev = '.site'
         self.head = 'https://www.copymanga.site'
         split_str = '**************************************\n    '
         self.welcome_text = f'使用说明（共4条，记得下拉）：\n{split_str}1.拷贝漫画{self.head}，根据书籍网址输入漫画名以及下载的卷号。\n{split_str}2.例如漫画网址是{self.head}/comic/yaoyeluying，则漫画名输入yaoyeluying。\n{split_str}3.要查询漫画卷号卷名等信息，则可以只输入漫画名不输入卷号，点击确定会返回漫画卷名称和对应的卷号。\n{split_str}4.根据上一步返回的信息确定自己想下载的卷号，要下载编号[2]对应卷，则卷号输入2。想下载多卷比如[1]至[3]对应卷，则卷号输入1-3或1,2,3（英文逗号分隔，编号也可以不连续）并点击确定。'

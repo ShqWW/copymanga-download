@@ -19,6 +19,7 @@
 * 前后端分离，同时支持命令行版本。
 * 章节批量下载。
 * 多线程预缓存策略，下载速度快。
+* 网站域名自定义更换，防止被墙。
 * ...................
 
 
@@ -28,11 +29,11 @@
 
 <!-- [release](https://github.com/ShqWW/bilinovel-download/releases/tag/downloader)页面发布了已经打包好的exe可执行程序，包括图形化版本和命令行版本(系统最低要求Windows 10)。 -->
 
-<!-- 界面样例：
+界面样例：
 <div align="center">
   <img src="resource/example1.png" width="400"/>
   <img src="resource/example2.png" width="400"/>
-</div> -->
+</div>
 
 ## 使用前安装需要的包
 ```
@@ -59,8 +60,8 @@ pyinstaller -F -w -i .\resource\logo.png --paths=C:\Users\haoru\copymanga-downlo
 pyinstaller -F -i .\resource\logo.png --paths=C:\Users\haoru\copymanga-download .\copymanga.py --clean
 ```
 
-<!-- 
-## EPUB书籍编辑和管理工具推荐：
+
+## EPUB书籍漫画编辑和管理工具推荐：
 1. [Sigil](https://sigil-ebook.com/) 
-2. [Calibre](https://www.calibre-ebook.com/) -->
+2. [Calibre](https://www.calibre-ebook.com/)
 
