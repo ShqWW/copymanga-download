@@ -136,6 +136,16 @@ def get_vol(vol_no):
     return vol_no
 
 
+def check_chars(win_chars):
+    win_illegal_chars = '?*"<>|'
+    new_chars = ''
+    for char in win_chars:
+        if char in win_illegal_chars:
+            new_chars += '.'
+        else:
+            new_chars += char
+    return new_chars
+
 
 
 

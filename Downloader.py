@@ -5,6 +5,7 @@ from rich.progress import track as tqdm
 from concurrent.futures import ThreadPoolExecutor, wait
 import time
 from PIL import Image
+from utils import *
 
 class Downloader(object):
     def __init__(self, comic_name, root_path = './', url_prev='.site', high_quality=False):
@@ -51,6 +52,7 @@ class Downloader(object):
             self.chap_uuid_list.append(comic_url['uuid'])
             self.chap_pagenum_list.append(comic_url['size'])
         self.comic_path = os.path.join(self.root_path, self.comic_title)
+        self.comic_path = check_chars(self.comic_path) 
         return self.chap_name_list, self.chap_uuid_list, self.chap_pagenum_list
 
     def get_image(self, is_gui=False, signal=None):

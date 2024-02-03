@@ -99,7 +99,7 @@ class Editer(object):
     
     def get_epub(self):
         print('正在打包EPUB......')
-        epub_file = os.path.join(self.out_root, self.title + '.epub')
+        epub_file = os.path.join(self.out_root, check_chars(self.title) + '.epub')
         with zipfile.ZipFile(epub_file, "w", zipfile.ZIP_DEFLATED) as zf:
             for dirpath, dirnames, filenames in os.walk(self.epub_path):
                 fpath = dirpath.replace(self.epub_path,'')
