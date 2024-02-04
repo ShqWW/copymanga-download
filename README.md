@@ -57,10 +57,7 @@ python copymanga_gui.py
 pip install pyinstaller
 ```
 ```
-pyinstaller -F -w -i .\resource\logo.png --paths=C:\Users\haoru\copymanga-download .\copymanga_gui.py --clean
-```
-```
-pyinstaller -F -i .\resource\logo.png --paths=C:\Users\haoru\copymanga-download .\copymanga.py --clean
+pyinstaller -F -w -i .\resource\logo.png .\copymanga_gui.py 
 ```
 
 ## 相关项目：

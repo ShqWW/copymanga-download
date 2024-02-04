@@ -137,11 +137,11 @@ def get_vol(vol_no):
 
 
 def check_chars(win_chars):
-    win_illegal_chars = '?*"<>|'
+    win_illegal_chars = '?*"<>|:/\\'
     new_chars = ''
     for char in win_chars:
         if char in win_illegal_chars:
-            new_chars += '.'
+            new_chars += '\u25A0'
         else:
             new_chars += char
     return new_chars
