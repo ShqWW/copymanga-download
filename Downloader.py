@@ -44,6 +44,12 @@ class Downloader(object):
     def get_comic_chaps(self):
         req = requests.get(self.comic_url, headers=self.header)
         comic_urls = req.json()['results']['list']
+        num_chaps = comic_urls[0]['count']
+        offset = 0
+        while offset<num_chaps:
+            offset += 500
+            req = requests.get(self.comic_url.replace('offset=0&', f'offset={offset}&'), headers=self.header)
+            comic_urls += req.json()['results']['list']
         self.chap_name_list = []
         self.chap_uuid_list = []
         self.chap_pagenum_list = []
