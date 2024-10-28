@@ -14,7 +14,7 @@ from enum import Enum
 from cfg_utils import *
 
 font_label = QFont('微软雅黑', 18)
-font_msg = QFont('微软雅黑', 11)
+font_msg = QFont('微软雅黑', 10)
 
 class MainThread(QThread):
     def __init__(self, parent):
@@ -27,7 +27,7 @@ class MainThread(QThread):
             comic_no = self.parent.editline_book.text()
             chap_no = self.parent.editline_volumn.text()
             url = read_config_dict("url")
-            high_quality = bool(read_config_dict("quality"))
+            high_quality = bool(int(read_config_dict("quality")))
             thread_num = read_config_dict("threadnum")
             download_path = read_config_dict("download_path")
             downloader_router(download_path, comic_no, chap_no, url, high_quality, True, thread_num, self.parent.hang_signal, self.parent.progressring_signal, self.parent.cover_signal, self.parent.editline_hang)
@@ -119,8 +119,8 @@ class SettingWidget(ScrollArea):
             self.setting_group
         ) 
 
-        is_high_qualify = (read_config_dict("qualify") == '1')
-        if is_high_qualify:
+        is_high_quality = (read_config_dict("quality") == '1')
+        if is_high_quality:
             self.qualityMode = OptionsConfigItem(None, "QualityMode", True, BoolValidator())
         else:
             self.qualityMode = OptionsConfigItem(None, "QualityMode", False, BoolValidator())
@@ -132,7 +132,7 @@ class SettingWidget(ScrollArea):
             configItem=self.qualityMode
         )
         self.quality_card.switchButton.setText(
-            self.tr('高') if is_high_qualify else self.tr('低'))
+            self.tr('高') if is_high_quality else self.tr('低'))
 
 
         self.resize(1000, 800)
@@ -212,12 +212,12 @@ class SettingWidget(ScrollArea):
     def quality_changed(self):
         is_checked = self.quality_card.isChecked()
         if is_checked:
-            write_config_dict("qualify", "1")
+            write_config_dict("quality", "1")
         else:
-            write_config_dict("qualify", "0")
+            write_config_dict("quality", "0")
 
         self.quality_card.switchButton.setText(
-            self.tr('高') if  read_config_dict("qualify")=='1' else self.tr('低'))
+            self.tr('高') if  read_config_dict("quality")=='1' else self.tr('低'))
         
         if os.path.exists('./config'):
             shutil.rmtree('./config')
@@ -238,7 +238,7 @@ class HomeWidget(QFrame):
         self.setObjectName(text)
         self.parent = parent
         self.label_book = SubtitleLabel('名称：', self)
-        self.label_volumn = SubtitleLabel('卷号：', self)
+        self.label_volumn = SubtitleLabel('编号：', self)
         self.editline_book = LineEdit(self) 
         self.editline_volumn = LineEdit(self) 
         
@@ -408,9 +408,9 @@ class Window(FluentWindow):
         self.splashScreen.raise_()
         initialize_db()
 
-        self.head = 'https://www.copymanga.site'
+        self.head = 'https://www.copymanga.tv'
         split_str = '**************************************\n    '
-        self.welcome_text = f'使用说明（共4条，记得下拉）：\n{split_str}1.拷贝漫画{self.head}，根据书籍网址输入漫画名以及下载的卷号。\n{split_str}2.例如漫画网址是{self.head}/comic/yaoyeluying，则漫画名输入yaoyeluying。\n{split_str}3.要查询漫画卷号卷名等信息，则可以只输入漫画名不输入卷号，点击确定会返回漫画卷名称和对应的卷号。\n{split_str}4.根据上一步返回的信息确定自己想下载的卷号，要下载编号[2]对应卷，则卷号输入2。想下载多卷比如[1]至[3]对应卷，则卷号输入1-3或1,2,3（英文逗号分隔，编号也可以不连续）并点击确定。'
+        self.welcome_text = f'使用说明：\n{split_str}1.拷贝漫画{self.head}，根据漫画网址输入漫画名以及下载话对应的号码。例如漫画网址是{self.head}/comic/yaoyeluying，则漫画名输入yaoyeluying。\n{split_str}2.要查询漫画编号等信息，则可以只输入漫画名不输入编号，点击确定会返回话名称和对应的编号。\n{split_str}3.输入下载的编号，要下载编号[2]对应话，则编号输入2。想下载多话比如[1]至[3]对应话，则编号输入1-3或1,2,3（英文逗号分隔，编号可以不连续）。'
         self.homeInterface = HomeWidget('Home Interface', self)
         self.settingInterface = SettingWidget('Setting Interface', self)
         self.initNavigation()

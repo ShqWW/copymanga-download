@@ -15,7 +15,7 @@ def parse_args():
 
 
 def query_chaps(comic_name, url, is_gui=False, hang_signal=None, edit_line_hang=None):
-    print('未输入卷号，将返回书籍目录信息......')
+    print('未输入编号，将返回漫画目录信息......')
     editer = Downloader(comic_name=comic_name, root_path='./out', url=url, num_thread=1)
     print('*******************************')
     editer.get_comic_msg(is_gui, hang_signal, edit_line_hang) 
@@ -27,7 +27,7 @@ def query_chaps(comic_name, url, is_gui=False, hang_signal=None, edit_line_hang=
         print(f'[{str(i+1)}]', chap_name)
 
     print('*******************************')
-    print('请输入所需要的卷号进行下载（多卷可以用英文逗号分隔或直接使用连字符，详情见说明）')
+    print('请输入所需要的编号进行下载（多卷可以用英文逗号分隔或直接使用连字符，详情见说明）')
 
 def download_task(root_path,
                 comic_name,
@@ -42,7 +42,7 @@ def download_task(root_path,
                 edit_line_hang=None):
     
     downloader = Downloader(comic_name=comic_name, root_path=root_path, url=url, high_quality=high_quality, num_thread=num_thread)
-    print('正在积极地获取书籍信息....')
+    print('正在积极地获取漫画信息....')
     downloader.get_comic_msg(is_gui, hang_signal, edit_line_hang) 
     downloader.get_comic_chaps()
     print(downloader.comic_title, downloader.comic_author)
@@ -116,11 +116,11 @@ if __name__=='__main__':
         downloader_router(root_path='out', comic_name=args.comic_no, chap_no=args.volume_no)
     else:
         while True:
-            args.comic_name = input('请输入书籍号：')
-            args.volume_no = input('请输入卷号(查看目录信息不输入直接按回车，下载多卷请使用逗号分隔或者连字符-)：')
-            # args.comic_name = 'xinglingganying'
-            # args.volume_no = '40'
-            downloader_router(root_path='out', comic_name=args.comic_name, chap_no=args.volume_no, url='copymanga.tv', high_quality=True, num_thread=4)
+            args.comic_name = input('请输入漫画名称：')
+            args.volume_no = input('请输入话数(查看目录信息不输入直接按回车，下载多卷请使用逗号分隔或者连字符-)：')
+            # args.comic_name = 'xiangbeidangzuoxixuegui'
+            # args.volume_no = '21'
+            downloader_router(root_path='out', comic_name=args.comic_name, chap_no=args.volume_no, url='mangacopy.com', high_quality=True, num_thread=4)
             # exit(0)
     
         

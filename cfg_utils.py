@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS config (
 );
 '''
 
-initial_config = {"download_path": './', "theme": "Auto", "numthread": '4', "url": "copymanga.tv", "qualify": "1"}
+initial_config = {"download_path": './', "theme": "Auto", "numthread": '8', "url": "mangacopy.com", "quality": "1"}
 
 def initialize_db():
     if not os.path.exists(DBPATH):
@@ -25,6 +25,14 @@ def initialize_db():
             ''')
             for key, value in initial_config.items():
                 cursor.execute("INSERT OR REPLACE INTO config (KEY, VALUE) VALUES (?, ?)", (key, value))
+            cursor.execute('PRAGMA journal_mode = DELETE;')
+            cursor.execute('PRAGMA locking_mode = EXCLUSIVE;')
+            conn.commit()
+    else:
+        with sqlite3.connect(DBPATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute('PRAGMA journal_mode = DELETE;')
+            cursor.execute('PRAGMA locking_mode = EXCLUSIVE;')
             conn.commit()
 
 def read_config_dict(key=None):

@@ -15,7 +15,7 @@
 
 特性:
 
-* Fluent Design风格界面，下载进度与书籍封面显示，主题切换，下载目录自定义。
+* Fluent Design风格界面，下载进度与漫画封面显示，主题切换，下载目录自定义。
 * 前后端分离，同时支持命令行版本。
 * 章节批量下载。
 * EPUB格式自动打包。
@@ -68,7 +68,7 @@ pyinstaller -F -w -i .\resource\logo.png .\copymanga_gui.py
 
 * [拷贝漫画EPUB下载器](https://github.com/ShqWW/copymanga-download)
 
-## EPUB书籍漫画编辑和管理工具推荐：
+## EPUB漫画漫画编辑和管理工具推荐：
 1. [Sigil](https://sigil-ebook.com/) 
 2. [Calibre](https://www.calibre-ebook.com/)
 

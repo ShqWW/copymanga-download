@@ -31,7 +31,7 @@ class Editer(object):
         
         print('正在打包处理图片......')
         for chap_no, chap in enumerate(self.chap_list):
-            img_path = os.path.join(self.comic_root, chap)
+            img_path = os.path.join(self.comic_root, check_chars(chap))
             imgs = os.listdir(img_path)
             img_no = 0
             self.chap_first_imgs.append(str(chap_no+1).zfill(3) + '_' + str(0).zfill(4) + '.jpg')

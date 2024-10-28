@@ -74,7 +74,7 @@ class Downloader(object):
     
     def download_single_chap(self, chap_name, uuid, page_num, is_gui=False, signal=None):
         print('正在下载'+chap_name)
-        chap_path = os.path.join(self.comic_path, chap_name)
+        chap_path = os.path.join(self.comic_path, check_chars(chap_name))
         os.makedirs(chap_path, exist_ok=True)
         if len(os.listdir(chap_path))==page_num:
             return 
@@ -132,7 +132,7 @@ class Downloader(object):
             self.buffer_map[url] = req
 
     def get_cover(self, chap_name, is_gui=False, signal=None):
-        chap_path = os.path.join(self.comic_path, chap_name)
+        chap_path = os.path.join(self.comic_path, check_chars(chap_name))
         imgfile = os.path.join(chap_path, '001.jpg')
         img = Image.open(imgfile)
         img_w, img_h = img.size
