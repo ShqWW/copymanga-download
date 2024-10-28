@@ -1,8 +1,8 @@
 # coding:utf-8
-from PyQt5.QtCore import Qt, pyqtSignal, QObject, QThread, QRegExp
-from PyQt5.QtGui import QIcon, QFont, QTextCursor, QPixmap, QColor,QRegExpValidator
-from PyQt5.QtWidgets import QApplication, QFrame, QGridLayout, QFileDialog
-from qfluentwidgets import (setTheme, Theme, PushSettingCard, SettingCardGroup, ExpandLayout, TextEdit, ImageLabel, LineEdit, PushButton, Theme, ProgressRing, setTheme, Theme, OptionsSettingCard, OptionsConfigItem, OptionsValidator, FluentWindow, SubtitleLabel, NavigationItemPosition, setThemeColor, qconfig, ComboBox, SwitchSettingCard, BoolValidator, MessageBox)
+from PyQt5.QtCore import Qt, pyqtSignal, QObject, QThread, QTimer, QSize
+from PyQt5.QtGui import QIcon, QFont, QTextCursor, QPixmap, QColor
+from PyQt5.QtWidgets import QApplication, QFrame, QGridLayout, QFileDialog, QWidget
+from qfluentwidgets import (setTheme, Theme, PushSettingCard, SettingCardGroup, ExpandLayout, TextEdit, ImageLabel, LineEdit, PushButton, ProgressRing, OptionsSettingCard, OptionsConfigItem, OptionsValidator, FluentWindow, SubtitleLabel, NavigationItemPosition, setThemeColor, qconfig, ComboBox, SwitchSettingCard, RangeSettingCard, BoolValidator, ScrollArea, RangeConfigItem, RangeValidator, SplashScreen)
 from qfluentwidgets import FluentIcon as FIF
 import sys
 import base64
@@ -11,6 +11,7 @@ from resource.logo import logo_base64
 from resource.book import book_base64
 from copymanga import *
 from enum import Enum
+from cfg_utils import *
 
 font_label = QFont('微软雅黑', 18)
 font_msg = QFont('微软雅黑', 11)
@@ -25,7 +26,11 @@ class MainThread(QThread):
         try:
             comic_no = self.parent.editline_book.text()
             chap_no = self.parent.editline_volumn.text()
-            downloader_router(self.parent.parent.out_path, comic_no, chap_no, self.parent.parent.url_prev, self.parent.parent.high_quality, True, self.parent.parent.multi_thread, self.parent.hang_signal, self.parent.progressring_signal, self.parent.cover_signal, self.parent.editline_hang)
+            url = read_config_dict("url")
+            high_quality = bool(read_config_dict("quality"))
+            thread_num = read_config_dict("threadnum")
+            download_path = read_config_dict("download_path")
+            downloader_router(download_path, comic_no, chap_no, url, high_quality, True, thread_num, self.parent.hang_signal, self.parent.progressring_signal, self.parent.cover_signal, self.parent.editline_hang)
             self.parent.end_signal.emit('')
         except Exception as e:
             self.parent.end_signal.emit('')
@@ -46,37 +51,37 @@ class EmittingStr(QObject):
         pass
 
 
-class UrlPrev(Enum):
+class Url(Enum):
     """ Theme enumeration """
 
-    SITE = ".site"
-    COM= ".com"
-    ORG = ".org"
-    NET = ".net"
-    TV = ".tv"
-    INFO = ".info"
+    TV = "copymanga.tv"
+    COM = "mangacopy.com"
 
-class SettingWidget(QFrame):
+class SettingWidget(ScrollArea):
     def __init__(self, text: str, parent=None):
         super().__init__(parent=parent)
 
+        self.scrollWidget = QWidget()
+        self.expandLayout = ExpandLayout(self.scrollWidget)
         self.parent = parent
-        self.expandLayout = ExpandLayout(self)
-        self.setObjectName(text.replace(' ', '-'))
-        self.setting_group = SettingCardGroup(self.tr("下载设置"), self)
+        self.setting_group = SettingCardGroup(self.tr("设置"), self.scrollWidget)
+
         
         self.download_path_card = PushSettingCard(
             self.tr('选择文件夹'),
             FIF.DOWNLOAD,
             self.tr("下载目录"),
-            self.parent.out_path,
+            read_config_dict("download_path"),
             self.setting_group
         )
-        self.themeMode = OptionsConfigItem(None, "ThemeMode", Theme.DARK, OptionsValidator(Theme), None)
-        self.urlMode = OptionsConfigItem(None, "urlMode", UrlPrev.SITE, OptionsValidator(UrlPrev), None)
 
-        self.threadMode = OptionsConfigItem(None, "ThreadMode", True, BoolValidator())
-        self.qualityMode = OptionsConfigItem(None, "QualityMode", True, BoolValidator())
+        theme_name = read_config_dict('theme')
+        if theme_name == 'Light':
+            self.themeMode = OptionsConfigItem(None, "ThemeMode", Theme.LIGHT, OptionsValidator(Theme), None)
+        elif theme_name == 'Dark':
+            self.themeMode = OptionsConfigItem(None, "ThemeMode", Theme.DARK, OptionsValidator(Theme), None)
+        else:
+            self.themeMode = OptionsConfigItem(None, "ThemeMode", Theme.AUTO, OptionsValidator(Theme), None)
 
         self.theme_card = OptionsSettingCard(
             self.themeMode,
@@ -85,32 +90,40 @@ class SettingWidget(QFrame):
             self.tr("更改外观"),
             texts=[
                 self.tr('亮'), self.tr('暗'),
-                self.tr('跟随系统设置')
+                self.tr('跟随系统')
             ],
             parent=self.parent
         )
 
+        if read_config_dict("url").endswith('tv'):
+            url_option = OptionsConfigItem(None, "urlMode", Url.TV, OptionsValidator(Url), None)
+        else: 
+            url_option = OptionsConfigItem(None, "urlMode", Url.COM, OptionsValidator(Url), None)
+        
         self.url_card = OptionsSettingCard(
-            self.urlMode,
+            url_option,
             FIF.VPN,
-            self.tr('漫画域名后缀'),
-            self.tr("漫画域名切换"),
+            self.tr('漫画域名切换'),
+            self.tr("切换域名"),
             texts=[
-                self.tr('.site'), self.tr('.org'),
-                self.tr('.com'), self.tr('.info'),
-                self.tr('.tv'), self.tr('.net')
+                self.tr("copymanga.tv"), self.tr("mangacopy.com"),
             ],
             parent=self.parent
         )
 
-        self.thread_card = SwitchSettingCard(
+        self.thread_card = RangeSettingCard(
+            RangeConfigItem("thread", "下载线程数量", int(read_config_dict("numthread")), RangeValidator(1, 16)),
             FIF.SPEED_HIGH,
-            self.tr('多线程缓存'),
-            self.tr('开启后理论上会加快下载速度，但可能会增加服务端压力'),
-            parent=self.parent,
-            configItem=self.threadMode
-        )
+            self.tr('图片下载线程数量'),
+            self.tr('适当增加充分利用带宽,但不要太高'),
+            self.setting_group
+        ) 
 
+        is_high_qualify = (read_config_dict("qualify") == '1')
+        if is_high_qualify:
+            self.qualityMode = OptionsConfigItem(None, "QualityMode", True, BoolValidator())
+        else:
+            self.qualityMode = OptionsConfigItem(None, "QualityMode", False, BoolValidator())
         self.quality_card = SwitchSettingCard(
             FIF.LEAF,
             self.tr('下载高质量图片'),
@@ -118,10 +131,38 @@ class SettingWidget(QFrame):
             parent=self.parent,
             configItem=self.qualityMode
         )
-        self.thread_card.setValue(True)
-        self.quality_card.setValue(True)
-        self.thread_changed()
-        self.quality_changed()
+        self.quality_card.switchButton.setText(
+            self.tr('高') if is_high_qualify else self.tr('低'))
+
+
+        self.resize(1000, 800)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setViewportMargins(0, 10, 0, 20)
+        self.setWidget(self.scrollWidget)
+        self.setWidgetResizable(True)
+        self.setObjectName('settingInterface2')
+
+        # initialize style sheet
+        self.scrollWidget.setObjectName('scrollWidget')
+        qss = '''
+                SettingInterface, #scrollWidget {
+                    background-color: transparent;
+                }
+
+                QScrollArea {
+                    border: none;
+                    background-color: transparent;
+                }
+
+                QLabel#settingLabel {
+                    font: 33px 'Microsoft YaHei Light';
+                    background-color: transparent;
+                    color: white;
+                }
+
+                '''
+        
+        self.setStyleSheet(qss)
 
         self.setting_group.addSettingCard(self.download_path_card)
         self.setting_group.addSettingCard(self.thread_card)
@@ -136,44 +177,51 @@ class SettingWidget(QFrame):
         self.download_path_card.clicked.connect(self.download_path_changed)
         self.theme_card.optionChanged.connect(self.theme_changed)
         self.url_card.optionChanged.connect(self.url_changed)
-        self.thread_card.checkedChanged.connect(self.thread_changed)
+        self.thread_card.valueChanged.connect(self.thread_changed)
         self.quality_card.checkedChanged.connect(self.quality_changed)
 
     def download_path_changed(self):
         """ download folder card clicked slot """
-        self.parent.out_path = QFileDialog.getExistingDirectory(
-            self, self.tr("Choose folder"), self.parent.out_path)
-        self.download_path_card.contentLabel.setText(self.parent.out_path)
+        out_path = QFileDialog.getExistingDirectory(
+            self, self.tr("Choose folder"), read_config_dict("download_path"))
+        write_config_dict("download_path", out_path)
+        self.download_path_card.contentLabel.setText(read_config_dict("download_path"))
     
     def theme_changed(self):
         theme_name = self.theme_card.choiceLabel.text()
-        self.parent.set_theme(theme_name)
+        if theme_name == '亮':
+            theme_mode = 'Light' 
+        elif theme_name == '暗':
+            theme_mode = 'Dark' 
+        elif theme_name == '跟随系统':
+            theme_mode = 'Auto' 
+        write_config_dict("theme", theme_mode)
+        self.parent.set_theme(read_config_dict("theme"))
         if os.path.exists('./config'):
             shutil.rmtree('./config')
 
     def url_changed(self):
-        self.parent.url_prev = self.url_card.choiceLabel.text()
+        write_config_dict("url", self.url_card.choiceLabel.text())
         if os.path.exists('./config'):
             shutil.rmtree('./config')
-    
+
     def thread_changed(self):
-        is_checked = self.thread_card.isChecked()
-        self.thread_card.switchButton.setText(
-            self.tr('开') if is_checked else self.tr('关'))
-        self.parent.multi_thread = is_checked
-        if os.path.exists('./config'):
-            shutil.rmtree('./config')
+        num_thread = self.thread_card.valueLabel.text()
+        write_config_dict("numthread", num_thread)
+
     def quality_changed(self):
         is_checked = self.quality_card.isChecked()
+        if is_checked:
+            write_config_dict("qualify", "1")
+        else:
+            write_config_dict("qualify", "0")
+
         self.quality_card.switchButton.setText(
-            self.tr('高') if is_checked else self.tr('低'))
-        self.parent.high_quality = is_checked
+            self.tr('高') if  read_config_dict("qualify")=='1' else self.tr('低'))
+        
         if os.path.exists('./config'):
             shutil.rmtree('./config')
         
-
-    
-
 
             
 
@@ -353,8 +401,13 @@ class Window(FluentWindow):
     def __init__(self):
         super().__init__()
 
-        self.out_path = os.path.join(os.path.expanduser('~'), 'Downloads')
-        self.url_prev = '.site'
+        pixmap = QPixmap()
+        pixmap.loadFromData(base64.b64decode(logo_base64))
+        self.splashScreen = SplashScreen(QIcon(pixmap), self)
+        self.splashScreen.setIconSize(QSize(100, 100))
+        self.splashScreen.raise_()
+        initialize_db()
+
         self.head = 'https://www.copymanga.site'
         split_str = '**************************************\n    '
         self.welcome_text = f'使用说明（共4条，记得下拉）：\n{split_str}1.拷贝漫画{self.head}，根据书籍网址输入漫画名以及下载的卷号。\n{split_str}2.例如漫画网址是{self.head}/comic/yaoyeluying，则漫画名输入yaoyeluying。\n{split_str}3.要查询漫画卷号卷名等信息，则可以只输入漫画名不输入卷号，点击确定会返回漫画卷名称和对应的卷号。\n{split_str}4.根据上一步返回的信息确定自己想下载的卷号，要下载编号[2]对应卷，则卷号输入2。想下载多卷比如[1]至[3]对应卷，则卷号输入1-3或1,2,3（英文逗号分隔，编号也可以不连续）并点击确定。'
@@ -362,8 +415,9 @@ class Window(FluentWindow):
         self.settingInterface = SettingWidget('Setting Interface', self)
         self.initNavigation()
         self.initWindow()
-        self.multi_thread = True
-        self.high_quality = True
+
+        QTimer.singleShot(50, lambda: self.set_theme(read_config_dict('theme')))
+        QTimer.singleShot(2000, lambda: self.splashScreen.close())
         
     def initNavigation(self):
         self.addSubInterface(self.homeInterface, FIF.HOME, '主界面')
@@ -382,11 +436,11 @@ class Window(FluentWindow):
         self.move(w//2 - self.width()//2, h//2 - self.height()//2)
     
     def set_theme(self, mode=None):
-        if mode=='亮':
+        if mode=='Light':
             setTheme(Theme.LIGHT)
-        elif mode=='暗':
+        elif mode=='Dark':
             setTheme(Theme.DARK)
-        elif mode=='跟随系统设置':
+        elif mode== 'Auto':
             setTheme(Theme.AUTO)
         theme = qconfig.theme
         if theme == Theme.DARK:

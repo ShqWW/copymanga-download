@@ -8,20 +8,19 @@ from PIL import Image
 from utils import *
 
 class Downloader(object):
-    def __init__(self, comic_name, root_path = './', url_prev='.site', high_quality=False):
+    def __init__(self, comic_name, root_path = './', url='copymanga.tv', high_quality=False, num_thread=8):
         self.comic_name = comic_name
         self.root_path = root_path
-        self.url_prev = url_prev
+        self.url = url
         self.high_quality = high_quality
-        self.comic_msg_url = f"https://api.copymanga{url_prev}/api/v3/comic2/{comic_name}"
-        self.comic_url_api = 'https://api.copymanga{}/api/v3/comic/{}/group/{}/chapters?limit=500&offset=0&platform=3'
-        self.chap_url_api = 'https://api.copymanga{}/api/v3/comic/{}/chapter2/{}?platform=3'
+        self.comic_msg_url = f"https://api.{self.url}/api/v3/comic2/{comic_name}"
+        self.comic_url_api = 'https://api.{}/api/v3/comic/{}/group/{}/chapters?limit=500&offset=0&platform=3'
+        self.chap_url_api = 'https://api.{}/api/v3/comic/{}/chapter2/{}?platform=3'
         
         
         self.header = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.67 Safari/537.36 Edg/87.0.664.47', 'platform': '1'}
-
-        self.max_thread_num = 16
-        self.pool = ThreadPoolExecutor(self.max_thread_num)
+        self.num_thread = num_thread
+        self.pool = ThreadPoolExecutor(self.num_thread)
         self.buffer_map = {}
 
     def get_comic_msg(self, is_gui=False, signal=None, editline=None):
@@ -39,7 +38,7 @@ class Downloader(object):
         elif len(cls_dict.keys())>1:
             choise_name = self.get_choise(list(self.cls_dict.keys()), is_gui, signal, editline)
             self.url_cls = self.cls_dict[choise_name]
-        self.comic_url = self.comic_url_api.format(self.url_prev, self.comic_name, self.url_cls)
+        self.comic_url = self.comic_url_api.format(self.url, self.comic_name, self.url_cls)
 
     def get_comic_chaps(self):
         req = requests.get(self.comic_url, headers=self.header)
@@ -73,13 +72,13 @@ class Downloader(object):
                 signal.emit(int(100*(i+1)/len_iter))
             
     
-    def download_single_chap(self, chap_name, uuid, page_num, multithread=True, is_gui=False, signal=None):
+    def download_single_chap(self, chap_name, uuid, page_num, is_gui=False, signal=None):
         print('正在下载'+chap_name)
         chap_path = os.path.join(self.comic_path, chap_name)
         os.makedirs(chap_path, exist_ok=True)
         if len(os.listdir(chap_path))==page_num:
             return 
-        img_url = self.chap_url_api.format(self.url_prev, self.comic_name, uuid)
+        img_url = self.chap_url_api.format(self.url, self.comic_name, uuid)
         while True:
             req = requests.get(img_url, headers=self.header)
             try:
@@ -92,27 +91,26 @@ class Downloader(object):
                 print('触发访问频率上限，重新请求.....')
                 time.sleep(10)
         img_urls = [url['url'] for url in req['chapter']['contents']]
-        
+        print(img_urls) 
         if self.high_quality:
             img_urls = [url.replace('c800x', 'c1500x') for url in img_urls]
         img_nos = req['chapter']['words']
-        if multithread:
-            for img_url in img_urls:
-                self.pool.submit(self.prev_buffer, img_url)
+        for img_url in img_urls:
+            self.pool.submit(self.prev_buffer, img_url)
         len_iter = len(img_urls)
         
         if is_gui:
             signal.emit('start') 
             for i, (img_no, img_url) in enumerate(zip(img_nos, img_urls)):
                 chap_name = os.path.join(chap_path, str(int(img_no)+1).zfill(3)+'.jpg')
-                self.download_img(img_url, chap_name, is_buffer=multithread)
+                self.download_img(img_url, chap_name, is_buffer=True)
                 signal.emit(int(100*(i+1)/len_iter))
             signal.emit('end')
         else:
             for i in tqdm(range(len_iter)):
                 img_no, img_url = img_nos[i], img_urls[i]
                 chap_name = os.path.join(chap_path, str(img_no+1).zfill(3)+'.jpg')
-                self.download_img(img_url, chap_name, is_buffer=multithread)
+                self.download_img(img_url, chap_name, is_buffer=True)
     
     def download_cover(self):
         os.makedirs(self.comic_path, exist_ok=True)
