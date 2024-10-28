@@ -91,7 +91,6 @@ class Downloader(object):
                 print('触发访问频率上限，重新请求.....')
                 time.sleep(10)
         img_urls = [url['url'] for url in req['chapter']['contents']]
-        print(img_urls) 
         if self.high_quality:
             img_urls = [url.replace('c800x', 'c1500x') for url in img_urls]
         img_nos = req['chapter']['words']
@@ -164,11 +163,11 @@ class Downloader(object):
         return choise
         
 
-if __name__=='__main__':
-    comic_name = 'yaoyeluying' 
-    # comic_name = 'zgmsbywt' 
-    downloader = Downloader(comic_name=comic_name)
-    for i in range(0, 3):
-        chap_name = downloader.chap_name_list[i]
-        chap_uuid = downloader.chap_uuid_list[i]
-        downloader.download_single_chap(chap_name, chap_uuid)
+# if __name__=='__main__':
+#     comic_name = 'yaoyeluying' 
+#     # comic_name = 'zgmsbywt' 
+#     downloader = Downloader(comic_name=comic_name)
+#     for i in range(0, 3):
+#         chap_name = downloader.chap_name_list[i]
+#         chap_uuid = downloader.chap_uuid_list[i]
+#         downloader.download_single_chap(chap_name, chap_uuid)
