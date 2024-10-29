@@ -18,6 +18,6 @@ def image_to_base64(image_path):
         encoded_string = base64.b64encode(image_file.read())
         return encoded_string.decode("utf-8")
 
-image_path = "resource/logo.png "
+image_path = "resource/logo_big.png "
 base64_string = image_to_base64(image_path)
 print(base64_string)

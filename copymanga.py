@@ -58,7 +58,7 @@ def download_task(root_path,
     downloader.download_cover()
     print('漫画下载成功！', f'漫画路径【{downloader.comic_path}】')
     chap_list = [downloader.chap_name_list[chap_no-1] for chap_no in chap_no_list]
-    editer = Editer(downloader.comic_title, downloader.comic_author, chap_list, downloader.comic_path, root_path, delete_comic=0)
+    editer = Editer(downloader.comic_title, downloader.comic_author, downloader.brief, downloader.tag_list,chap_list, downloader.comic_path, root_path, delete_comic=0)
     editer.pack_img()
     editer.typesetting()
     editer.get_epub()
@@ -116,10 +116,10 @@ if __name__=='__main__':
         downloader_router(root_path='out', comic_name=args.comic_no, chap_no=args.volume_no)
     else:
         while True:
-            args.comic_name = input('请输入漫画名称：')
-            args.volume_no = input('请输入话数(查看目录信息不输入直接按回车，下载多卷请使用逗号分隔或者连字符-)：')
-            # args.comic_name = 'xiangbeidangzuoxixuegui'
-            # args.volume_no = '21'
+            # args.comic_name = input('请输入漫画名称：')
+            # args.volume_no = input('请输入话数(查看目录信息不输入直接按回车，下载多卷请使用逗号分隔或者连字符-)：')
+            args.comic_name = 'xinglingganying'
+            args.volume_no = '1-3'
             downloader_router(root_path='out', comic_name=args.comic_name, chap_no=args.volume_no, url='mangacopy.com', high_quality=True, num_thread=4)
             # exit(0)
     

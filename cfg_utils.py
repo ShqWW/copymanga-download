@@ -10,12 +10,18 @@ CREATE TABLE IF NOT EXISTS config (
 );
 '''
 
-initial_config = {"download_path": './', "theme": "Auto", "numthread": '8', "url": "mangacopy.com", "quality": "1"}
+initial_config = {
+    "download_path": './',        # 下载路径
+    "theme": "Auto",             # 主题设置
+    "numthread": '8',            # 线程数量
+    "url": "mangacopy.com",      # URL 地址
+    "quality": "1"               # 质量设置
+}
 
 def initialize_db():
     if not os.path.exists(DBPATH):
         with sqlite3.connect(DBPATH) as conn:
-            conn.execute("PRAGMA journal_mode=WAL")
+            conn.execute("PRAGMA journal_mode=DELETE")
             cursor = conn.cursor()
             cursor.execute('''
             CREATE TABLE IF NOT EXISTS config (
@@ -25,28 +31,22 @@ def initialize_db():
             ''')
             for key, value in initial_config.items():
                 cursor.execute("INSERT OR REPLACE INTO config (KEY, VALUE) VALUES (?, ?)", (key, value))
-            cursor.execute('PRAGMA journal_mode = DELETE;')
-            cursor.execute('PRAGMA locking_mode = EXCLUSIVE;')
-            conn.commit()
-    else:
-        with sqlite3.connect(DBPATH) as conn:
-            cursor = conn.cursor()
-            cursor.execute('PRAGMA journal_mode = DELETE;')
-            cursor.execute('PRAGMA locking_mode = EXCLUSIVE;')
             conn.commit()
 
 def read_config_dict(key=None):
+    if key is None:
+        return None
     with sqlite3.connect(DBPATH) as conn:
+        conn.execute("PRAGMA journal_mode=DELETE")
         cursor = conn.cursor()
-        if key is None:
-            return None
-        else:
-            cursor.execute("SELECT VALUE FROM config WHERE KEY = ?", (key,))
-            result = cursor.fetchone()
-            return result[0] if result else None
+        cursor.execute("SELECT VALUE FROM config WHERE KEY = ?", (key,))
+        result = cursor.fetchone()
+        conn.commit()
+        return result[0] if result else None
 
 def write_config_dict(key, value):
     with sqlite3.connect(DBPATH) as conn:
+        conn.execute("PRAGMA journal_mode=DELETE")
         cursor = conn.cursor()
         cursor.execute("INSERT OR REPLACE INTO config (KEY, VALUE) VALUES (?, ?)", (key, value))
         conn.commit()

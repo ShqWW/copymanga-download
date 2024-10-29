@@ -4,15 +4,20 @@ import shutil
 from utils import *
 from PIL import Image
 import numpy as np
+import tempfile
 
 class Editer(object):
-    def __init__(self, title, author, chap_list, comic_root, out_root, delete_comic=False):
+    def __init__(self, title, author, brief, tag_list, chap_list, comic_root, out_root, delete_comic=False):
 
         self.title = self.get_epub_title(title, chap_list)
         self.author = author
         self.chap_list = chap_list
         self.comic_root = comic_root
+        self.temp_path_io = tempfile.TemporaryDirectory()
+        self.temp_path = self.temp_path_io.name
         self.out_root = out_root
+        self.brief = brief
+        self.tag_list = tag_list
 
         self.img_list = []
         self.chap_first_imgs = []
@@ -20,10 +25,10 @@ class Editer(object):
 
     def pack_img(self):
 
-        self.epub_path = os.path.join(self.out_root, 'tmp')
-        self.epub_oebps_path = os.path.join(self.out_root, 'tmp/OEBPS')
-        self.epub_img_path = os.path.join(self.out_root, 'tmp/OEBPS/Images')
-        self.epub_text_path = os.path.join(self.out_root, 'tmp/OEBPS/Text')
+        self.epub_path = os.path.join(self.temp_path, 'tmp')
+        self.epub_oebps_path = os.path.join(self.temp_path, 'tmp/OEBPS')
+        self.epub_img_path = os.path.join(self.temp_path, 'tmp/OEBPS/Images')
+        self.epub_text_path = os.path.join(self.temp_path, 'tmp/OEBPS/Text')
         os.makedirs(self.epub_path, exist_ok=True)
         os.makedirs(self.epub_oebps_path, exist_ok=True)
         os.makedirs(self.epub_img_path, exist_ok=True)
@@ -74,7 +79,7 @@ class Editer(object):
 
 
         #内容页
-        content_htmls = get_content_html(self.title, self.author, self.img_list)
+        content_htmls = get_content_html(self.title, self.author, self.brief, self.tag_list, self.img_list)
         textfile = os.path.join(self.epub_oebps_path, 'content.opf')
         with open(textfile, 'w+', encoding='utf-8') as f:
             f.writelines(content_htmls)
@@ -106,7 +111,8 @@ class Editer(object):
                 fpath = fpath and fpath + os.sep or ''
                 for filename in filenames:
                     zf.write(os.path.join(dirpath, filename), fpath+filename)
-        shutil.rmtree(self.epub_path)
+        # shutil.rmtree(self.epub_path)
+        self.temp_path_io.cleanup()
         if self.delete_comic:
             shutil.rmtree(self.comic_root)
         print('EPUB生成成功, 路径【{}】'.format(epub_file))

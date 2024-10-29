@@ -28,6 +28,8 @@ class Downloader(object):
         req = req['results']
         self.comic_title = req['comic']['name']
         self.comic_author = req['comic']['author'][0]['name']
+        self.brief =  req['comic']['brief']
+        self.tag_list = [tag_dict['name'] for tag_dict in req['comic']['theme']]
         self.cover_url = req['comic']['cover']
         cls_dict = req['groups']
         self.cls_dict = {}

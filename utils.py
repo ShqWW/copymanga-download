@@ -25,10 +25,14 @@ def get_xhtml(img):
     text_body.append('  <img alt=\"'+ img.replace('.jpg', '') +'\" src=\"../Images/'+ img +'\"/>\n')
     text_body.append('</body>\n')
     text_head = []
+    text_head.append('<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\"\n')
+    text_head.append('  \"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">\n')
+    text_head.append('\n')
+    text_head.append('<html xmlns=\"http://www.w3.org/1999/xhtml\">\n')
     text_head.append('<head>\n')
     text_head.append('  <title></title>\n')
     text_head.append('</head>\n')
-    text_htmls = ['<?xml version="1.0" encoding="utf-8"?>\n', '<html>\n'] + text_head + text_body + ['</html>']
+    text_htmls = ['<?xml version="1.0" encoding="utf-8"?>\n'] + text_head + text_body + ['</html>']
     return text_htmls
 
 def get_toc_html(title, chap_names, chap_imgs):
@@ -38,7 +42,6 @@ def get_toc_html(title, chap_names, chap_imgs):
     toc_htmls.append('   \"http://www.daisy.org/z3986/2005/ncx-2005-1.dtd\">\n\n')
     toc_htmls.append('<ncx xmlns=\"http://www.daisy.org/z3986/2005/ncx/\" version=\"2005-1\">\n')
     toc_htmls.append('  <head>\n')
-    toc_htmls.append('    <meta name=\"dtb:uid\" content=\"urn:uuid:a18aac05-497d-476d-b66f-0211f609743d\" />\n')
     toc_htmls.append('    <meta name=\"dtb:depth\" content=\"0\" />\n')
     toc_htmls.append('    <meta name=\"dtb:totalPageCount\" content=\"0\" />\n')
     toc_htmls.append('    <meta name=\"dtb:maxPageNumber\" content=\"0\" />\n')
@@ -59,15 +62,17 @@ def get_toc_html(title, chap_names, chap_imgs):
     return toc_htmls
 
 
-def get_content_html(title, author, img_list):
+def get_content_html(title, author, brief, tag_list, img_list):
     content_htmls = []
     content_htmls.append('<?xml version=\"1.0\" encoding=\"utf-8\"?>\n')
     content_htmls.append('<package version=\"2.0\" unique-identifier=\"BookId\" xmlns=\"http://www.idpf.org/2007/opf\">\n')
     content_htmls.append('  <metadata xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:opf=\"http://www.idpf.org/2007/opf\">\n')
-    content_htmls.append('    <dc:identifier id=\"BookId\" opf:scheme=\"UUID\">urn:uuid:942b8224-476b-463b-9078-cdfab0ee2686</dc:identifier>\n')
-    content_htmls.append('    <dc:language>zh</dc:language>\n')
+    content_htmls.append('    <dc:language>zh-TW</dc:language>\n')
     content_htmls.append('    <dc:title>'+ title +'</dc:title>\n')
-    content_htmls.append('    <dc:creator opf:role="aut" opf:file-as="未知">'+ author +'</dc:creator>\n')
+    content_htmls.append('    <dc:creator>'+ author +'</dc:creator>\n')
+    content_htmls.append('    <dc:description>'+ brief +'</dc:description>\n')
+    for tag in tag_list:
+       content_htmls.append('    <dc:subject>'+ tag +'</dc:subject>\n') 
     content_htmls.append('    <meta name=\"cover\" content=\"x000_0000.jpg\"/>\n')
     content_htmls.append('  </metadata>\n')
     content_htmls.append('  <manifest>\n')
@@ -124,17 +129,6 @@ def get_color_html(colorimg_num):
     color_htmls.append('</body>\n')
     color_htmls.append('</html>')
     return color_htmls
-
-
-
-def get_vol(vol_no):
-    vol_no = str(vol_no)
-    s="零一二三四五六七八九"
-    for c in "0123456789":
-        vol_no=vol_no.replace(c,s[eval(c)])
-    vol_no = '第' + vol_no + '卷'
-    return vol_no
-
 
 def check_chars(win_chars):
     win_illegal_chars = '?*"<>|:/\\'

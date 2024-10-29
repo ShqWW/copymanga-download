@@ -8,6 +8,7 @@ import sys
 import base64
 import shutil
 from resource.logo import logo_base64
+from resource.logo_big import logo_big_base64
 from resource.book import book_base64
 from copymanga import *
 from enum import Enum
@@ -208,6 +209,8 @@ class SettingWidget(ScrollArea):
     def thread_changed(self):
         num_thread = self.thread_card.valueLabel.text()
         write_config_dict("numthread", num_thread)
+        if os.path.exists('./config'):
+            shutil.rmtree('./config')
 
     def quality_changed(self):
         is_checked = self.quality_card.isChecked()
@@ -218,7 +221,6 @@ class SettingWidget(ScrollArea):
 
         self.quality_card.switchButton.setText(
             self.tr('高') if  read_config_dict("quality")=='1' else self.tr('低'))
-        
         if os.path.exists('./config'):
             shutil.rmtree('./config')
         
@@ -402,9 +404,9 @@ class Window(FluentWindow):
         super().__init__()
 
         pixmap = QPixmap()
-        pixmap.loadFromData(base64.b64decode(logo_base64))
+        pixmap.loadFromData(base64.b64decode(logo_big_base64))
         self.splashScreen = SplashScreen(QIcon(pixmap), self)
-        self.splashScreen.setIconSize(QSize(100, 100))
+        self.splashScreen.setIconSize(QSize(250, 250))
         self.splashScreen.raise_()
         initialize_db()
 
