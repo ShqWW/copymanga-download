@@ -29,7 +29,7 @@ class MainThread(QThread):
             chap_no = self.parent.editline_volumn.text()
             url = read_config_dict("url")
             high_quality = bool(int(read_config_dict("quality")))
-            thread_num = read_config_dict("threadnum")
+            thread_num = int(read_config_dict("numthread"))
             download_path = read_config_dict("download_path")
             downloader_router(download_path, comic_no, chap_no, url, high_quality, True, thread_num, self.parent.hang_signal, self.parent.progressring_signal, self.parent.cover_signal, self.parent.editline_hang)
             self.parent.end_signal.emit('')

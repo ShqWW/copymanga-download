@@ -2,7 +2,6 @@ import argparse
 from Downloader import Downloader
 from Editer import Editer
 import os
-import shutil
 
 def parse_args():
     """Parse input arguments."""
