@@ -22,6 +22,6 @@ class EmittingStr(QObject):
 
 
 class Url(Enum):
-    """ Theme enumeration """
+    """ url enumeration """
     TV = "copymanga.tv"
     COM = "mangacopy.com"
