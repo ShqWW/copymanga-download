@@ -46,18 +46,19 @@ class SettingWidget(ScrollArea):
             parent=self.parent
         )
 
-        if read_config_dict("url").endswith('tv'):
-            url_option = OptionsConfigItem(None, "urlMode", Url.TV, OptionsValidator(Url), None)
-        else: 
-            url_option = OptionsConfigItem(None, "urlMode", Url.COM, OptionsValidator(Url), None)
-        
+        # this part only support two urls
+        # if you want to add more urls, please modify the code accordingly
+        if read_config_dict("url").endswith('mangacopy.com'):
+            url_option = OptionsConfigItem(None, "urlMode", Url.url1, OptionsValidator(Url), None)
+        else:
+            url_option = OptionsConfigItem(None, "urlMode", Url.url2, OptionsValidator(Url), None)
         self.url_card = OptionsSettingCard(
             url_option,
             FIF.VPN,
             self.tr('漫画域名切换'),
             self.tr("切换域名"),
             texts=[
-                self.tr("copymanga.tv"), self.tr("mangacopy.com"),
+                self.tr(Url.url1.value), self.tr(Url.url2.value),
             ],
             parent=self.parent
         )

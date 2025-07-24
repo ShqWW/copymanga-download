@@ -23,5 +23,5 @@ class EmittingStr(QObject):
 
 class Url(Enum):
     """ url enumeration """
-    TV = "copymanga.tv"
-    COM = "mangacopy.com"
+    url1 = "mangacopy.com"
+    url2 = "2025copy.com"

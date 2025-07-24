@@ -23,7 +23,7 @@ if __name__=='__main__':
             args.volume_no = input('请输入话数(查看目录信息不输入直接按回车，下载多卷请使用逗号分隔或者连字符-)：')
             # args.comic_name = 'xinglingganying'
             # args.volume_no = '1-3'
-            downloader_router(root_path='out', comic_name=args.comic_name, chap_no=args.volume_no, url='mangacopy.com', high_quality=True, num_thread=4)
+            downloader_router(root_path='out', comic_name=args.comic_name, chap_no=args.volume_no, url='2025copy.com', high_quality=True, num_thread=4)
             # exit(0)
     
         

@@ -29,7 +29,7 @@ class MainWindow(FluentWindow):
         self.splashScreen.raise_()
         initialize_db()
 
-        self.head = 'https://www.copymanga.tv'
+        self.head = 'https://www.mangacopy.com'
         split_str = '**************************************\n    '
         self.welcome_text = f'使用说明：\n{split_str}1.拷贝漫画{self.head}，根据漫画网址输入漫画名以及下载话对应的号码。例如漫画网址是{self.head}/comic/yaoyeluying，则漫画名输入yaoyeluying。\n{split_str}2.要查询漫画编号等信息，则可以只输入漫画名不输入编号，点击确定会返回话名称和对应的编号。\n{split_str}3.输入下载的编号，要下载编号[2]对应话，则编号输入2。想下载多话比如[1]至[3]对应话，则编号输入1-3或1,2,3（英文逗号分隔，编号可以不连续）。'
         self.homeInterface = HomeWidget('Home Interface', self)

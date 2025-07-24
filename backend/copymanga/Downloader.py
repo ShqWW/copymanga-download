@@ -8,7 +8,7 @@ from PIL import Image
 from backend.copymanga.utils import *
 
 class Downloader(object):
-    def __init__(self, comic_name, root_path = './', url='copymanga.tv', high_quality=False, num_thread=8):
+    def __init__(self, comic_name, root_path = './', url='copymanga.com', high_quality=False, num_thread=8):
         self.comic_name = comic_name
         self.root_path = root_path
         self.url = url
@@ -24,7 +24,7 @@ class Downloader(object):
         self.buffer_map = {}
 
     def get_comic_msg(self, is_gui=False, signal=None, editline=None):
-        req = requests.get(self.comic_msg_url, headers=self.header).json()
+        req = requests.get(self.comic_msg_url).json()
         req = req['results']
         self.comic_title = req['comic']['name']
         self.comic_author = req['comic']['author'][0]['name']
@@ -43,13 +43,13 @@ class Downloader(object):
         self.comic_url = self.comic_url_api.format(self.url, self.comic_name, self.url_cls)
 
     def get_comic_chaps(self):
-        req = requests.get(self.comic_url, headers=self.header)
+        req = requests.get(self.comic_url)
         comic_urls = req.json()['results']['list']
         num_chaps = comic_urls[0]['count']
         offset = 0
         while offset<num_chaps:
             offset += 500
-            req = requests.get(self.comic_url.replace('offset=0&', f'offset={offset}&'), headers=self.header)
+            req = requests.get(self.comic_url.replace('offset=0&', f'offset={offset}&'))
             comic_urls += req.json()['results']['list']
         self.chap_name_list = []
         self.chap_uuid_list = []
@@ -82,7 +82,7 @@ class Downloader(object):
             return 
         img_url = self.chap_url_api.format(self.url, self.comic_name, uuid)
         while True:
-            req = requests.get(img_url, headers=self.header)
+            req = requests.get(img_url)
             try:
                 req = req.json()['results']
             except:
@@ -124,13 +124,13 @@ class Downloader(object):
                 time.sleep(1)
             req = self.buffer_map[img_url]
         else:
-            req = requests.get(img_url, headers=self.header).content
+            req = requests.get(img_url).content
         with open(file_name, 'wb') as f:
             f.write(req)
 
     def prev_buffer(self, url):
         if url not in self.buffer_map.keys():
-            req = requests.get(url, headers=self.header).content
+            req = requests.get(url).content
             self.buffer_map[url] = req
 
     def get_cover(self, chap_name, is_gui=False, signal=None):
