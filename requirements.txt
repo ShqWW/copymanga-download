@@ -2,5 +2,6 @@
 requests
 bs4
 rich
+pillow
 pyqt5
 PyQt-Fluent-Widgets[full]
